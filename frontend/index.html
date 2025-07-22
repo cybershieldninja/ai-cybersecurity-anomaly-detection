@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cybersecurity Anomaly Detection Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0f23, #1a1a2e);
+            color: #ffffff;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(45deg, #16213e, #0f3460);
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            border-bottom: 2px solid #00ff88;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #00ff88, #00b4d8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        .status-normal { background: #28a745; }
+        .status-warning { background: #ffc107; color: #000; }
+        .status-critical { background: #dc3545; }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: linear-gradient(145deg, #1e1e3f, #2a2a5e);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border: 1px solid #4a4a8a;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0, 255, 136, 0.2);
+        }
+
+        .card h3 {
+            color: #00ff88;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .card-icon {
+            margin-right: 10px;
+            font-size: 1.5rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #00b4d8;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #cccccc;
+            margin-top: 5px;
+        }
+
+        .alert-item {
+            background: rgba(220, 53, 69, 0.1);
+            border-left: 4px solid #dc3545;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+
+        .alert-high { border-left-color: #dc3545; }
+        .alert-medium { border-left-color: #ffc107; background: rgba(255, 193, 7, 0.1); }
+        .alert-low { border-left-color: #28a745; background: rgba(40, 167, 69, 0.1); }
+
+        .alert-time {
+            color: #888;
+            font-size: 0.8rem;
+        }
+
+        .control-panel {
+            background: linear-gradient(145deg, #2a2a5e, #1e1e3f);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .control-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #00ff88, #00b4d8);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            color: #000;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0, 255, 136, 0.3);
+        }
+
+        .btn-danger {
+            background: linear-gradient(45deg, #dc3545, #c82333);
+            color: white;
+        }
+
+        .input-field {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid #4a4a8a;
+            border-radius: 5px;
+            padding: 8px 12px;
+            color: white;
+            width: 100px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-top: 15px;
+        }
+
+        .threat-indicator {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            margin: 5px 0;
+        }
+
+        .threat-level {
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .level-low { background: #28a745; }
+        .level-medium { background: #ffc107; color: #000; }
+        .level-high { background: #dc3545; }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            margin-top: 40px;
+            border-top: 1px solid #4a4a8a;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🛡️ AI-Driven Cybersecurity Anomaly Detection</h1>
+        <p>Real-time Network Security Monitoring & Threat Detection</p>
+        <span id="systemStatus" class="status-indicator status-normal">SYSTEM OPERATIONAL</span>
+    </div>
+
+    <div class="dashboard">
+        <!-- Real-time Statistics -->
+        <div class="card">
+            <h3><span class="card-icon">📊</span> Real-time Statistics</h3>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-value" id="totalConnections">0</div>
+                    <div class="stat-label">Total Connections</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="anomaliesDetected">0</div>
+                    <div class="stat-label">Anomalies Detected</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="threatLevel">LOW</div>
+                    <div class="stat-label">Threat Level</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="detectionRate">0%</div>
+                    <div class="stat-label">Detection Rate</div>
+                </div>
+            </div>
+            
+            <div class="control-panel">
+                <h4>🎛️ Control Panel</h4>
+                <div class="control-group">
+                    <button class="btn" onclick="toggleMonitoring()" id="monitorBtn">Start Monitoring</button>
+                    <button class="btn btn-danger" onclick="clearAlerts()">Clear Alerts</button>
+                    <label>Sensitivity:</label>
+                    <input type="range" min="1" max="10" value="5" id="sensitivitySlider" onchange="updateSensitivity()">
+                    <span id="sensitivityValue">5</span>
+                </div>
+                <div class="control-group">
+                    <label>Detection Models:</label>
+                    <select id="modelSelect" onchange="updateModel()">
+                        <option value="ensemble">Ensemble (Recommended)</option>
+                        <option value="isolation_forest">Isolation Forest</option>
+                        <option value="dbscan">DBSCAN Clustering</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Anomaly Detection Chart -->
+        <div class="card">
+            <h3><span class="card-icon">📈</span> Anomaly Detection Timeline</h3>
+            <div class="chart-container">
+                <canvas id="anomalyChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Network Traffic Analysis -->
+        <div class="card">
+            <h3><span class="card-icon">🌐</span> Network Traffic Analysis</h3>
+            <div class="chart-container">
+                <canvas id="trafficChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Threat Intelligence -->
+        <div class="card">
+            <h3><span class="card-icon">⚠️</span> Threat Intelligence</h3>
+            <div class="threat-indicator">
+                <span>DDoS Attack Risk</span>
+                <span class="threat-level level-low" id="ddosLevel">LOW</span>
+            </div>
+            <div class="threat-indicator">
+                <span>Port Scanning Activity</span>
+                <span class="threat-level level-low" id="portScanLevel">LOW</span>
+            </div>
+            <div class="threat-indicator">
+                <span>Brute Force Attempts</span>
+                <span class="threat-level level-low" id="bruteForceLevel">LOW</span>
+            </div>
+            <div class="threat-indicator">
+                <span>Data Exfiltration Risk</span>
+                <span class="threat-level level-low" id="exfiltrationLevel">LOW</span>
+            </div>
+            <div class="threat-indicator">
+                <span>Malware Communication</span>
+                <span class="threat-level level-low" id="malwareLevel">LOW</span>
+            </div>
+        </div>
+
+        <!-- Recent Alerts -->
+        <div class="card">
+            <h3><span class="card-icon">🚨</span> Recent Security Alerts</h3>
+            <div id="alertsContainer">
+                <p style="color: #888; text-align: center; margin-top: 20px;">No alerts detected. System monitoring...</p>
+            </div>
+        </div>
+        <!-- Traffic log -->        
+        <div class="card">
+          <h2>Traffic Log</h2>
+          <table id="trafficLog">
+            <thead>
+              <tr>
+                <th>Time</th>
+                <th>Bytes Sent</th>
+                <th>Bytes Received</th>
+                <th>Packets/sec</th>
+                <th>Score</th>
+                <th>Anomaly</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>        
+
+        <!-- Model Performance -->
+        <div class="card">
+            <h3><span class="card-icon">🤖</span> Model Performance</h3>
+            <div class="chart-container">
+                <canvas id="performanceChart"></canvas>
+            </div>
+            <div class="stats-grid" style="margin-top: 15px;">
+                <div class="stat-item">
+                    <div class="stat-value" id="accuracy">95.2%</div>
+                    <div class="stat-label">Accuracy</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="precision">92.8%</div>
+                    <div class="stat-label">Precision</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="recall">89.1%</div>
+                    <div class="stat-label">Recall</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="f1Score">90.9%</div>
+                    <div class="stat-label">F1-Score</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>© 2024 AI-Driven Cybersecurity System | Last Updated: <span id="lastUpdate"></span></p>
+    </div>
+
+    <script>
+        // Global variables for monitoring
+        let isMonitoring = false;
+        let monitoringInterval;
+        let totalConnections = 0;
+        let anomaliesDetected = 0;
+        let alertCount = 0;
+        let sensitivity = 5;
+        let currentModel = 'ensemble';
+
+        // Chart instances
+        let anomalyChart, trafficChart, performanceChart;
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeCharts();
+            updateTimestamp();
+            setInterval(updateTimestamp, 1000);
+        });
+
+        function initializeCharts() {
+            // Anomaly Detection Timeline Chart
+            const anomalyCtx = document.getElementById('anomalyChart').getContext('2d');
+            anomalyChart = new Chart(anomalyCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Normal Traffic',
+                        data: [],
+                        borderColor: '#00ff88',
+                        backgroundColor: 'rgba(0, 255, 136, 0.1)',
+                        tension: 0.4
+                    }, {
+                        label: 'Anomalies',
+                        data: [],
+                        borderColor: '#dc3545',
+                        backgroundColor: 'rgba(220, 53, 69, 0.3)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: '#ffffff' }
+                        }
+                    },
+                    scales: {
+                        x: { 
+                            ticks: { color: '#ffffff' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        },
+                        y: { 
+                            ticks: { color: '#ffffff' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        }
+                    }
+                }
+            });
+
+            // Network Traffic Analysis Chart
+            const trafficCtx = document.getElementById('trafficChart').getContext('2d');
+            trafficChart = new Chart(trafficCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['HTTP/HTTPS', 'SSH', 'FTP', 'DNS', 'Other'],
+                    datasets: [{
+                        data: [45, 20, 15, 10, 10],
+                        backgroundColor: [
+                            '#00ff88',
+                            '#00b4d8',
+                            '#ffc107',
+                            '#dc3545',
+                            '#6f42c1'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: '#ffffff' }
+                        }
+                    }
+                }
+            });
+
+            // Model Performance Chart
+            const performanceCtx = document.getElementById('performanceChart').getContext('2d');
+            performanceChart = new Chart(performanceCtx, {
+                type: 'radar',
+                data: {
+                    labels: ['Accuracy', 'Precision', 'Recall', 'F1-Score', 'Speed', 'Reliability'],
+                    datasets: [{
+                        label: 'Current Model',
+                        data: [95, 93, 89, 91, 87, 94],
+                        borderColor: '#00ff88',
+                        backgroundColor: 'rgba(0, 255, 136, 0.2)',
+                        pointBackgroundColor: '#00ff88'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: '#ffffff' }
+                        }
+                    },
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: { color: '#ffffff' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                            pointLabels: { color: '#ffffff' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function toggleMonitoring() {
+            const btn = document.getElementById('monitorBtn');
+            const status = document.getElementById('systemStatus');
+            
+            if (!isMonitoring) {
+                isMonitoring = true;
+                btn.textContent = 'Stop Monitoring';
+                btn.className = 'btn btn-danger';
+                status.textContent = 'MONITORING ACTIVE';
+                status.className = 'status-indicator status-warning pulse';
+                startMonitoring();
+            } else {
+                isMonitoring = false;
+                btn.textContent = 'Start Monitoring';
+                btn.className = 'btn';
+                status.textContent = 'MONITORING STOPPED';
+                status.className = 'status-indicator status-normal';
+                stopMonitoring();
+            }
+        }
+        function appendToLog(data) {
+          const row = document.createElement("tr");
+          console.log(data)
+          row.innerHTML = `
+            <td>${new Date().toLocaleTimeString()}</td>
+            <td>${data.bytes_sent}</td>
+            <td>${data.bytes_received}</td>
+            <td>${data.packets_per_second.toFixed(2)}</td>
+            <td>${data.anomaly_score.toFixed(2)}</td>
+            <td style="color: ${data.is_anomaly ? 'red' : 'green'}">
+              ${data.is_anomaly ? 'Anomaly' : 'Normal'}
+            </td>
+          `;
+          const tbody = document.querySelector("#trafficLog tbody");
+          tbody.prepend(row); // Add to top
+          if (tbody.rows.length > 20) tbody.deleteRow(-1); // Limit to 20 entries
+        }
+
+        function startMonitoring() {
+            monitoringInterval = setInterval(() => {
+                fetch("http://localhost:8000/predict-realtime", {
+                    method: "POST"
+                })
+                .then((res) => res.json())
+                .then((data) => {
+                    totalConnections++;
+                    if (data.is_anomaly) anomaliesDetected++;
+                    updateStatistics();
+
+                    const currentTime = new Date().toLocaleTimeString();
+                    if (anomalyChart.data.labels.length > 20) {
+                        anomalyChart.data.labels.shift();
+                        anomalyChart.data.datasets[0].data.shift();
+                        anomalyChart.data.datasets[1].data.shift();
+                    }
+                    anomalyChart.data.labels.push(currentTime);
+                    anomalyChart.data.datasets[0].data.push(data.anomaly_score);
+                    anomalyChart.data.datasets[1].data.push(data.is_anomaly);
+                    anomalyChart.update("none");
+
+                    if (data.is_anomaly) generateAlert(1);
+                    updateThreatLevels();
+                    appendToLog(data);
+                })
+                .catch((err) => console.error("Monitoring error:", err));
+            }, 2000); // Every 2 seconds
+        }
+
+            // monitoringInterval = setInterval(() => {
+            //     // Simulate network data processing
+            //     const newConnections = Math.floor(Math.random() * 50) + 10;
+            //     const newAnomalies = Math.floor(Math.random() * (sensitivity / 2)) + 
+            //                        (Math.random() < 0.1 ? Math.floor(Math.random() * 5) : 0);
+                
+            //     totalConnections += newConnections;
+            //     anomaliesDetected += newAnomalies;
+                
+            //     updateStatistics();
+            //     updateCharts();
+                
+            //     // Generate alerts for anomalies
+            //     if (newAnomalies > 0) {
+            //         generateAlert(newAnomalies);
+            //     }
+                
+            //     // Update threat levels
+            //     updateThreatLevels();
+                
+            // }, 2000); // Update every 2 seconds
+//        }
+
+        function stopMonitoring() {
+            if (monitoringInterval) {
+                clearInterval(monitoringInterval);
+            }
+        }
+
+        function updateStatistics() {
+            document.getElementById('totalConnections').textContent = totalConnections.toLocaleString();
+            document.getElementById('anomaliesDetected').textContent = anomaliesDetected;
+            
+            const detectionRate = totalConnections > 0 ? 
+                ((anomaliesDetected / totalConnections) * 100).toFixed(1) : '0';
+            document.getElementById('detectionRate').textContent = detectionRate + '%';
+            
+            // Update threat level based on detection rate
+            const threatLevelEl = document.getElementById('threatLevel');
+            if (detectionRate > 5) {
+                threatLevelEl.textContent = 'HIGH';
+                threatLevelEl.style.color = '#dc3545';
+            } else if (detectionRate > 2) {
+                threatLevelEl.textContent = 'MEDIUM';
+                threatLevelEl.style.color = '#ffc107';
+            } else {
+                threatLevelEl.textContent = 'LOW';
+                threatLevelEl.style.color = '#28a745';
+            }
+        }
+
+        function updateCharts() {
+            const currentTime = new Date().toLocaleTimeString();
+            
+            // Update anomaly chart
+            if (anomalyChart.data.labels.length > 20) {
+                anomalyChart.data.labels.shift();
+                anomalyChart.data.datasets[0].data.shift();
+                anomalyChart.data.datasets[1].data.shift();
+            }
+            
+            anomalyChart.data.labels.push(currentTime);
+            anomalyChart.data.datasets[0].data.push(Math.floor(Math.random() * 100) + 50);
+            anomalyChart.data.datasets[1].data.push(Math.floor(Math.random() * 20));
+            anomalyChart.update('none');
+            
+            // Update traffic distribution (simulate changes)
+            const trafficData = trafficChart.data.datasets[0].data;
+            for (let i = 0; i < trafficData.length; i++) {
+                trafficData[i] += (Math.random() - 0.5) * 2;
+                if (trafficData[i] < 5) trafficData[i] = 5;
+                if (trafficData[i] > 60) trafficData[i] = 60;
+            }
+            trafficChart.update('none');
+        }
+
+        function generateAlert(count) {
+            const alertsContainer = document.getElementById('alertsContainer');
+            const timestamp = new Date().toLocaleTimeString();
+            
+            // Clear "no alerts" message
+            if (alertCount === 0) {
+                alertsContainer.innerHTML = '';
+            }
+            
+            const severity = count > 3 ? 'high' : count > 1 ? 'medium' : 'low';
+            const threatTypes = ['DDoS Attack', 'Port Scanning', 'Brute Force', 'Suspicious Traffic', 'Data Exfiltration'];
+            const randomThreat = threatTypes[Math.floor(Math.random() * threatTypes.length)];
+            
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert-item alert-${severity}`;
+            alertDiv.innerHTML = `
+                <strong>${randomThreat} Detected</strong><br>
+                ${count} anomalous connection${count > 1 ? 's' : ''} detected<br>
+                <span class="alert-time">${timestamp}</span>
+            `;
+            
+            alertsContainer.insertBefore(alertDiv, alertsContainer.firstChild);
+            alertCount++;
+            
+            // Keep only last 10 alerts
+            while (alertsContainer.children.length > 10) {
+                alertsContainer.removeChild(alertsContainer.lastChild);
+            }
+            
+            // Update system status for critical alerts
+            if (severity === 'high') {
+                const status = document.getElementById('systemStatus');
+                status.textContent = 'CRITICAL ALERT';
+                status.className = 'status-indicator status-critical pulse';
+                setTimeout(() => {
+                    if (isMonitoring) {
+                        status.textContent = 'MONITORING ACTIVE';
+                        status.className = 'status-indicator status-warning pulse';
+                    }
+                }, 5000);
+            }
+        }
+
+        function updateThreatLevels() {
+            const levels = ['LOW', 'MEDIUM', 'HIGH'];
+            const classes = ['level-low', 'level-medium', 'level-high'];
+            
+            // Randomly update threat levels (in real implementation, this would be based on actual analysis)
+            const threats = ['ddosLevel', 'portScanLevel', 'bruteForceLevel', 'exfiltrationLevel', 'malwareLevel'];
+            
+            threats.forEach(threatId => {
+                const element = document.getElementById(threatId);
+                const randomLevel = Math.floor(Math.random() * 100);
+                let levelIndex = 0;
+                
+                if (randomLevel > 85) levelIndex = 2; // HIGH
+                else if (randomLevel > 70) levelIndex = 1; // MEDIUM
+                
+                element.textContent = levels[levelIndex];
+                element.className = `threat-level ${classes[levelIndex]}`;
+            });
+        }
+
+        function clearAlerts() {
+            document.getElementById('alertsContainer').innerHTML = 
+                '<p style="color: #888; text-align: center; margin-top: 20px;">No alerts detected. System monitoring...</p>';
+            alertCount = 0;
+        }
+
+        function updateSensitivity() {
+            const slider = document.getElementById('sensitivitySlider');
+            sensitivity = slider.value;
+            document.getElementById('sensitivityValue').textContent = sensitivity;
+        }
+
+        function updateModel() {
+            currentModel = document.getElementById('modelSelect').value;
+            
+            // Update performance metrics based on selected model
+            const metrics = {
+                'ensemble': { accuracy: 95.2, precision: 92.8, recall: 89.1, f1: 90.9 },
+                'isolation_forest': { accuracy: 91.5, precision: 88.2, recall: 85.7, f1: 86.9 },
+                'dbscan': { accuracy: 87.3, precision: 84.1, recall: 82.4, f1: 83.2 }
+            };
+            
+            const modelMetrics = metrics[currentModel];
+            document.getElementById('accuracy').textContent = modelMetrics.accuracy + '%';
+            document.getElementById('precision').textContent = modelMetrics.precision + '%';
+            document.getElementById('recall').textContent = modelMetrics.recall + '%';
+            document.getElementById('f1Score').textContent = modelMetrics.f1 + '%';
+            
+            // Update radar chart
+            performanceChart.data.datasets[0].data = [
+                modelMetrics.accuracy,
+                modelMetrics.precision,
+                modelMetrics.recall,
+                modelMetrics.f1,
+                Math.random() * 20 + 80, // Speed
+                Math.random() * 10 + 90  // Reliability
+            ];
+            performanceChart.update();
+        }
+
+        function updateTimestamp() {
+            document.getElementById('lastUpdate').textContent = new Date().toLocaleString();
+        }
+    </script>
+</body>
+</html>
