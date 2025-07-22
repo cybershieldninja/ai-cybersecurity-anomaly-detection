@@ -5,12 +5,13 @@ This project implements a comprehensive machine learning-based anomaly detection
 ---
 
 ## 📂 Project Structure
+```yaml
 ├── frontend/
 │ └── index.html # HTML dashboard UI
 ├── backend/
 │ └── main_api.py # FastAPI backend serving ML model
 │ └── realtime.py # NetworkAnomalyDetector class (model logic)
-
+```
 
 🚀 Key Features Implemented:
 ✅ Multi-Model Ensemble: Isolation Forest + DBSCAN for 95.2% accuracy
@@ -88,7 +89,7 @@ cd ai-cyber-anomaly-detection
 ```
   Runs the backend on http://localhost:8000
 
-# Run the backend api
+### Run the backend api
 
 ```python
   
