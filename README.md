@@ -129,8 +129,12 @@ results = detector.predict(custom_data)
 ```
 
 ## 📌 Future Enhancements
-Live packet capture via scapy
-Admin dashboard with historical graphing
-Exportable log to CSV
-Threshold-based alert tuning
-Deploy on cloud VM / container
+    Live packet capture via scapy
+    Admin dashboard with historical graphing
+    Exportable log to CSV
+    Threshold-based alert tuning
+    Deploy on cloud VM / container
+
+## 📞 Support
+  For technical support and questions:
+    Create an issue on GitHub
