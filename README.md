@@ -14,44 +14,45 @@ This project implements a comprehensive machine learning-based anomaly detection
 ```
 
 🚀 Key Features Implemented:
-✅ Multi-Model Ensemble: Isolation Forest + DBSCAN for 95.2% accuracy
-✅ Real-time Processing: 2000+ connections/second capability
-✅ Threat Classification: Identifies 5+ attack types automatically
-✅ Interactive Dashboard: Professional web interface with live updates
-✅ Configurable Alerts: Adjustable sensitivity and custom thresholds
-✅ Comprehensive Visualization: Timeline charts, traffic analysis, performance radar
-✅ CORS-enabled API for local testing
+  ✅ Multi-Model Ensemble: Isolation Forest + DBSCAN for 95.2% accuracy
+  ✅ Real-time Processing: 2000+ connections/second capability
+  ✅ Threat Classification: Identifies 5+ attack types automatically
+  ✅ Interactive Dashboard: Professional web interface with live updates
+  ✅ Configurable Alerts: Adjustable sensitivity and custom thresholds
+  ✅ Comprehensive Visualization: Timeline charts, traffic analysis, performance radar
+  ✅ CORS-enabled API for local testing
 
 ---
 
 # 🔧 Technical Implementation
-Machine Learning Models
-1. Isolation Forest
 
-Purpose: Detects anomalies by isolating outliers in feature space
-Advantages: Effective for high-dimensional data, low computational cost
-Parameters: 100 estimators, 10% contamination rate
+  Machine Learning Models
+  1. Isolation Forest
 
-```python
-pythonself.isolation_forest = IsolationForest(
-    contamination=contamination, 
-    random_state=42,
-    n_estimators=100
-)
-```
-2. DBSCAN Clustering
+  Purpose: Detects anomalies by isolating outliers in feature space
+  Advantages: Effective for high-dimensional data, low computational cost
+  Parameters: 100 estimators, 10% contamination rate
 
-Purpose: Identifies density-based anomalies and clusters
-Advantages: No assumption about cluster shape, handles noise well
-Parameters: eps=0.5, min_samples=5
+  ```python
+  pythonself.isolation_forest = IsolationForest(
+      contamination=contamination, 
+      random_state=42,
+      n_estimators=100
+  )
+  ```
+  2. DBSCAN Clustering
 
-```python 
-pythonself.dbscan = DBSCAN(eps=0.5, min_samples=5)
-```
-3. Ensemble Method
+  Purpose: Identifies density-based anomalies and clusters
+  Advantages: No assumption about cluster shape, handles noise well
+  Parameters: eps=0.5, min_samples=5
 
-Purpose: Combines predictions from multiple models for higher accuracy
-Logic: Flags samples as anomalous if detected by either model
+  ```python 
+  pythonself.dbscan = DBSCAN(eps=0.5, min_samples=5)
+  ```
+  3. Ensemble Method
+
+  Purpose: Combines predictions from multiple models for higher accuracy
+  Logic: Flags samples as anomalous if detected by either model
 
 ## 🧹 Data Preprocessing
 ```python
