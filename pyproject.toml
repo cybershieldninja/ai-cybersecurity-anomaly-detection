@@ -1,0 +1,16 @@
+[project]
+name = "ai-cybersecurity-anomaly-detection"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi>=0.116.1",
+    "matplotlib>=3.10.3",
+    "numpy>=2.3.1",
+    "panda>=0.3.1",
+    "psutil>=7.0.0",
+    "scikit-learn>=1.7.1",
+    "seaborn>=0.13.2",
+    "uvicorn>=0.35.0",    
+]
